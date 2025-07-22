@@ -1,8 +1,6 @@
-# Core libraries
-flask
-gunicorn
-aiohttp
-aiofiles
-opencv-python-headless
-Pillow
-numpy
+Flask>=2.3.0
+aiohttp>=3.9.0
+aiofiles>=23.2.0
+opencv-python>=4.9.0
+Pillow>=10.0.0
+numpy>=1.24.0
