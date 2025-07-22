@@ -2,7 +2,7 @@
 """
 SVG Crop API
 
-FastAPI service that processes SVG files, extracts images, creates masks,
+Flask service that processes SVG files, extracts images, creates masks,
 and returns precisely cropped images as a ZIP file encoded in base64 format.
 """
 
@@ -11,15 +11,12 @@ import logging
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Dict, Any
 import shutil
 import uuid
 import base64
+from functools import wraps
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, HttpUrl
-import uvicorn
+from flask import Flask, request, jsonify
 
 from svg_processor import SVGProcessor
 
@@ -30,23 +27,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# FastAPI app
-app = FastAPI(
-    title="SVG Crop API",
-    description="API for processing SVG files and extracting precisely cropped images",
-    version="1.0.0"
-)
-
-# Request models
-class SVGProcessRequest(BaseModel):
-    svg_url: HttpUrl
-    output_format: str = "png"  # png or jpeg
+# Flask app
+app = Flask(__name__)
 
 # Global processor instance
 processor = SVGProcessor()
 
+def async_action(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        return asyncio.run(f(*args, **kwargs))
+    return wrapped
+
 def cleanup_temp_dir(temp_dir: Path):
-    """Clean up temporary directory in background"""
+    """Clean up temporary directory"""
     try:
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
@@ -54,14 +48,21 @@ def cleanup_temp_dir(temp_dir: Path):
     except Exception as e:
         logger.error(f"Failed to cleanup {temp_dir}: {e}")
 
-@app.get("/health")
-async def health_check():
+@app.route("/health", methods=["GET"])
+def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "svg-crop-api"}
+    return jsonify({"status": "healthy", "service": "svg-crop-api"})
 
-@app.post("/crop-svg")
-async def crop_svg(request: SVGProcessRequest, background_tasks: BackgroundTasks):
+@app.route("/crop-svg", methods=["POST"])
+@async_action
+async def crop_svg():
     """Process SVG URL and return ZIP file with cropped images encoded in base64."""
+    if not request.json or "svg_url" not in request.json:
+        return jsonify({"error": "Missing svg_url in request"}), 400
+
+    svg_url = request.json["svg_url"]
+    output_format = request.json.get("output_format", "png")
+
     # Create unique temporary directory
     temp_id = str(uuid.uuid4())[:8]
     temp_dir = Path(tempfile.gettempdir()) / f"svg_crop_{temp_id}"
@@ -69,25 +70,24 @@ async def crop_svg(request: SVGProcessRequest, background_tasks: BackgroundTasks
     try:
         # Create temporary directory
         temp_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Processing SVG: {request.svg_url}")
+        logger.info(f"Processing SVG: {svg_url}")
         logger.info(f"Temporary directory: {temp_dir}")
         
         # Process SVG
         result = await processor.process_svg_async(
-            str(request.svg_url),
+            svg_url,
             temp_dir,
-            request.output_format
+            output_format
         )
         
         if not result["success"]:
-            raise HTTPException(status_code=400, detail=result["error"])
+            return jsonify({"error": result["error"]}), 400
         
         # Create ZIP file
         zip_path = temp_dir / f"cropped_images_{temp_id}.zip"
         
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Add all cropped images to ZIP
-            crop_files = list(temp_dir.glob(f"crop_region*.{request.output_format}"))
+            crop_files = list(temp_dir.glob(f"crop_region*.{output_format}"))
             mask_files = list(temp_dir.glob("mask_region*.png"))
             
             for file_path in crop_files + mask_files:
@@ -95,7 +95,7 @@ async def crop_svg(request: SVGProcessRequest, background_tasks: BackgroundTasks
                 logger.info(f"Added to ZIP: {file_path.name}")
         
         if not crop_files:
-            raise HTTPException(status_code=400, detail="No cropped images were generated")
+            return jsonify({"error": "No cropped images were generated"}), 400
         
         zip_size = zip_path.stat().st_size
         logger.info(f"Created ZIP file: {zip_path} ({zip_size} bytes)")
@@ -105,49 +105,36 @@ async def crop_svg(request: SVGProcessRequest, background_tasks: BackgroundTasks
             zip_content = zip_file.read()
             zip_base64 = base64.b64encode(zip_content).decode('utf-8')
         
-        # Schedule cleanup for after response is sent
-        background_tasks.add_task(cleanup_temp_dir, temp_dir)
+        # Cleanup temporary directory
+        cleanup_temp_dir(temp_dir)
         
         # Return ZIP file as base64
-        return JSONResponse(
-            content={
-                "success": True,
-                "filename": "cropped_images.zip",
-                "file_base64": zip_base64,
-                "file_size": zip_size,
-                "regions_processed": result["regions_processed"],
-                "images_downloaded": result["images_downloaded"]
-            },
-            headers={
-                "Content-Type": "application/json"
-            }
-        )
+        return jsonify({
+            "success": True,
+            "filename": "cropped_images.zip",
+            "file_base64": zip_base64,
+            "file_size": zip_size,
+            "regions_processed": result["regions_processed"],
+            "images_downloaded": result["images_downloaded"]
+        })
         
-    except HTTPException:
-        cleanup_temp_dir(temp_dir)
-        raise
     except Exception as e:
         logger.error(f"Error processing SVG: {e}")
         cleanup_temp_dir(temp_dir)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-@app.get("/")
-async def root():
+@app.route("/", methods=["GET"])
+def root():
     """Root endpoint with API information"""
-    return {
+    return jsonify({
         "service": "SVG Crop API",
         "version": "1.0.0",
+        "framework": "Flask",
         "endpoints": {
             "POST /crop-svg": "Process SVG and return cropped images as ZIP in base64 format",
             "GET /health": "Health check"
         }
-    }
+    })
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8877,
-        reload=False,
-        log_level="info"
-    )
+    app.run(host="0.0.0.0", port=8877)

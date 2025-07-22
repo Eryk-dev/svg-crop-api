@@ -1,28 +1,30 @@
-FROM python:3.11-slim
+# Base image
+FROM python:3.9-slim
 
+# Set working directory
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    libgl1-mesa-glx \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
-COPY svg_processor.py .
+# Copy application code
+COPY . .
 
-RUN mkdir -p /tmp/svg_processing
+# Set permissions and create temporary directory
+RUN chmod +x /app/app.py && \
+    mkdir -p /tmp/svg_processing && \
+    chown -R www-data:www-data /tmp/svg_processing
 
+# Switch to a non-root user
+USER www-data
+
+# Expose port
 EXPOSE 8877
 
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8877/health || exit 1
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8877", "--workers", "1"]
+# Start Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8877", "--workers", "4", "app:app"]
