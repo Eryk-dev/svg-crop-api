@@ -20,9 +20,9 @@ COPY svg_processor.py .
 
 RUN mkdir -p /tmp/svg_processing
 
-EXPOSE 8000
+EXPOSE 8877
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8877/health || exit 1
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8877", "--workers", "1"]

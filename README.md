@@ -29,7 +29,7 @@ python app.py
 
 3. **Test the API:**
 ```bash
-curl -X POST "http://localhost:8000/crop-svg" \
+curl -X POST "http://localhost:8877/crop-svg" \
      -H "Content-Type: application/json" \
      -d '{"svg_url": "https://example.com/mockup.svg", "output_format": "png"}' \
      --output cropped_images.zip
@@ -44,7 +44,7 @@ docker build -t svg-crop-api .
 
 2. **Run the container:**
 ```bash
-docker run -p 8000:8000 svg-crop-api
+docker run -p 8877:8877 svg-crop-api
 ```
 
 ### VPS Deployment
@@ -58,7 +58,7 @@ cd svg-crop-api
 2. **Build and run:**
 ```bash
 docker build -t svg-crop-api .
-docker run -d -p 8000:8000 --name svg-crop-api svg-crop-api
+docker run -d -p 8877:8877 --name svg-crop-api svg-crop-api
 ```
 
 ## API Endpoints
@@ -89,7 +89,7 @@ API information and usage examples.
 import requests
 
 response = requests.post(
-    "http://localhost:8000/crop-svg",
+    "http://localhost:8877/crop-svg",
     json={
         "svg_url": "https://example.com/mockup.svg",
         "output_format": "png"
@@ -104,7 +104,7 @@ if response.status_code == 200:
 
 ### JavaScript/Node.js
 ```javascript
-const response = await fetch('http://localhost:8000/crop-svg', {
+const response = await fetch('http://localhost:8877/crop-svg', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
