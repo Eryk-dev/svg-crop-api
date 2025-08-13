@@ -254,16 +254,26 @@ class SVGProcessor:
                 
                 cropped = img.crop((x1, y1, x2, y2))
                 
-                file_ext = "png" if output_format == "png" else "jpeg"
-                crop_filename = f"crop_region{region_idx}_{image_filename.rsplit('.', 1)[0]}.{file_ext}"
+                # Sempre converter para PNG com canal alfa e fundo branco
+                # Converter para RGBA se não estiver
+                if cropped.mode != 'RGBA':
+                    cropped = cropped.convert('RGBA')
+                
+                # Criar uma nova imagem com fundo branco sólido
+                white_background = Image.new('RGBA', cropped.size, (255, 255, 255, 255))
+                
+                # Compor a imagem sobre o fundo branco
+                # A imagem original fica por cima, o fundo branco fica por baixo
+                final_image = Image.alpha_composite(white_background, cropped)
+                
+                # Nome do arquivo sempre .png
+                crop_filename = f"crop_region{region_idx}_{image_filename.rsplit('.', 1)[0]}.png"
                 crop_path = out_dir / crop_filename
                 
-                if output_format == "png":
-                    cropped.save(crop_path, format="PNG")
-                else:
-                    cropped.save(crop_path, format="JPEG", quality=95)
+                # Salvar sempre como PNG com transparência
+                final_image.save(crop_path, format="PNG", optimize=True)
                 
-                logger.info(f"Cropped: {crop_filename}")
+                logger.info(f"Cropped with alpha channel and white background: {crop_filename}")
                 return True
                 
         except Exception as e:

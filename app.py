@@ -58,9 +58,8 @@ def crop_svg():
         raise BadRequest('JSON body must include "svg_url".')
 
     svg_url = data['svg_url']
-    output_format = data.get('output_format', 'png').lower()
-    if output_format not in ('png', 'jpeg'):
-        raise BadRequest('output_format must be "png" or "jpeg"')
+    # Sempre usar PNG para suportar transparência e fundo branco
+    output_format = 'png'
 
     temp_id = str(uuid.uuid4())[:8]
     temp_dir = Path(tempfile.gettempdir()) / f"svg_crop_{temp_id}"
@@ -81,7 +80,8 @@ def crop_svg():
 
         zip_path = temp_dir / f"cropped_images_{temp_id}.zip"
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            crop_files = list(temp_dir.glob(f"crop_region*.{output_format}"))
+            # Sempre PNG agora
+            crop_files = list(temp_dir.glob("crop_region*.png"))
             mask_files = list(temp_dir.glob("mask_region*.png"))
 
             for file_path in crop_files + mask_files:
@@ -122,10 +122,15 @@ def root():
     """Root endpoint with API information."""
     return {
         "service": "SVG Crop API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "endpoints": {
-            "POST /crop-svg": "Process SVG and return cropped images as ZIP in base64 format",
+            "POST /crop-svg": "Process SVG and return cropped PNG images with alpha channel and white background as ZIP in base64 format",
             "GET /health": "Health check"
+        },
+        "features": {
+            "image_format": "PNG with alpha channel",
+            "background": "Solid white layer behind all images", 
+            "output": "ZIP file with cropped images and masks"
         }
     }
 

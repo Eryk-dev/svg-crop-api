@@ -5,7 +5,8 @@ FastAPI service that processes SVG files with precise image cropping capabilitie
 ## Features
 
 - ✅ **Precise Cropping**: Uses transformation matrices for pixel-perfect crops
-- ✅ **Multiple Formats**: Supports PNG and JPEG output
+- ✅ **PNG with Alpha Channel**: All images converted to PNG with transparency support
+- ✅ **White Background Layer**: Solid white background added behind all images
 - ✅ **Automatic Detection**: Dynamically detects any number of clipping regions
 - ✅ **Temporary Processing**: No persistent storage, everything is processed in memory
 - ✅ **ZIP Output**: Returns all results in a convenient ZIP file
@@ -31,7 +32,7 @@ python app.py
 ```bash
 curl -X POST "http://localhost:8877/crop-svg" \
      -H "Content-Type: application/json" \
-     -d '{"svg_url": "https://example.com/mockup.svg", "output_format": "png"}' \
+     -d '{"svg_url": "https://example.com/mockup.svg"}' \
      --output cropped_images.zip
 ```
 
@@ -69,12 +70,11 @@ Process an SVG file and return cropped images as ZIP.
 **Request Body:**
 ```json
 {
-  "svg_url": "https://example.com/mockup.svg",
-  "output_format": "png"
+  "svg_url": "https://example.com/mockup.svg"
 }
 ```
 
-**Response:** ZIP file containing cropped images and masks.
+**Response:** ZIP file containing cropped PNG images with alpha channel and white background, plus masks.
 
 ### GET /health
 Health check endpoint.
@@ -91,15 +91,14 @@ import requests
 response = requests.post(
     "http://localhost:8877/crop-svg",
     json={
-        "svg_url": "https://example.com/mockup.svg",
-        "output_format": "png"
+        "svg_url": "https://example.com/mockup.svg"
     }
 )
 
 if response.status_code == 200:
     with open("cropped_images.zip", "wb") as f:
         f.write(response.content)
-    print("ZIP file saved!")
+    print("ZIP file saved with PNG images!")
 ```
 
 ### JavaScript/Node.js
@@ -110,8 +109,7 @@ const response = await fetch('http://localhost:8877/crop-svg', {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    svg_url: 'https://example.com/mockup.svg',
-    output_format: 'png'
+    svg_url: 'https://example.com/mockup.svg'
   })
 });
 
