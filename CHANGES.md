@@ -114,6 +114,27 @@ Todas as imagens serão PNG com transparência e fundo branco.
 
 ---
 
-**Versão**: 1.1.0  
+## 🐛 Correção do Dockerfile (v1.1.1)
+
+### Problema Identificado:
+- O pacote `libgl1-mesa-glx` foi descontinuado no Debian Trixie
+- Build do Docker falhava com erro: "Package 'libgl1-mesa-glx' has no installation candidate"
+
+### Solução:
+- **Dockerfile principal**: Substituído `libgl1-mesa-glx` por `libgl1`
+- **Dockerfile.alternative**: Criado com fallback para diferentes versões do Debian
+
+### Como usar:
+```bash
+# Usar Dockerfile principal (corrigido)
+docker build -t svg-crop-api .
+
+# Se ainda houver problemas, usar o alternativo
+docker build -f Dockerfile.alternative -t svg-crop-api .
+```
+
+---
+
+**Versão**: 1.1.1  
 **Data**: Agosto 2024  
 **Autor**: Sistema atualizado conforme requisitos do usuário

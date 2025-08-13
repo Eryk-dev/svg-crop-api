@@ -1,15 +1,17 @@
+# Dockerfile alternativo com maior compatibilidade
 FROM python:3.11-slim
 
 WORKDIR /app
 
+# Instalação de dependências com fallback para diferentes versões de pacotes
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgl1 \
     curl \
+    && (apt-get install -y libgl1 || apt-get install -y libgl1-mesa-glx || apt-get install -y libgl1-mesa-dri) \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
