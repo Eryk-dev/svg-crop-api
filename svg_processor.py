@@ -34,7 +34,7 @@ class SVGProcessor:
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        connector = aiohttp.TCPConnector(ssl=False)
         self.session = aiohttp.ClientSession(connector=connector)
         return self
     
@@ -84,11 +84,7 @@ class SVGProcessor:
         """Download a file from URL to destination path."""
         try:
             if not self.session:
-                import ssl
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                connector = aiohttp.TCPConnector(ssl=False)
                 self.session = aiohttp.ClientSession(connector=connector)
             
             async with self.session.get(url) as response:
@@ -109,11 +105,7 @@ class SVGProcessor:
         """Download SVG from URL and fix common formatting issues."""
         try:
             if not self.session:
-                import ssl
-                ssl_context = ssl.create_default_context()
-                ssl_context.verify_mode = ssl.CERT_NONE
-                ssl_context.check_hostname = False
-                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                connector = aiohttp.TCPConnector(ssl=False)
                 self.session = aiohttp.ClientSession(connector=connector)
             
             async with self.session.get(url) as response:
