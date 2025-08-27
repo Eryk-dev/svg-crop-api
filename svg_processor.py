@@ -230,21 +230,38 @@ class SVGProcessor:
             a, b, c, d, tx, ty = transform_matrix
             img_x, img_y, img_width, img_height = image_attrs
             
-            # Check for division by zero in transform matrix
-            if a == 0 or d == 0:
-                logger.error(f"Invalid transform matrix for {image_filename}: a={a}, d={d}")
-                return False
-            
             # Check for division by zero in image dimensions
             if img_width == 0 or img_height == 0:
                 logger.error(f"Invalid image dimensions for {image_filename}: width={img_width}, height={img_height}")
                 return False
             
-            # Transform coordinates
-            group_clip_x = (clip_x - tx) / a
-            group_clip_y = (clip_y - ty) / d
-            group_clip_w = clip_w / a
-            group_clip_h = clip_h / d
+            # Handle rotation matrix - when a=0 and d=0, use b and c instead
+            # Matrix: [a, b, c, d, tx, ty]
+            # Standard: [sx, 0, 0, sy, tx, ty]
+            # Rotated 90°: [0, sy, -sx, 0, tx, ty] where sy=b and sx=-c
+            if a == 0 and d == 0:
+                # This is a 90-degree rotation matrix
+                if b == 0 or c == 0:
+                    logger.error(f"Invalid rotation matrix for {image_filename}: b={b}, c={c}")
+                    return False
+                # For 90-degree rotation: use b for scaling and c for direction
+                scale_x = abs(b)
+                scale_y = abs(c)
+                # Transform coordinates for rotated matrix
+                group_clip_x = (clip_x - tx) / scale_y if scale_y != 0 else 0
+                group_clip_y = (clip_y - ty) / scale_x if scale_x != 0 else 0
+                group_clip_w = clip_w / scale_y if scale_y != 0 else 0
+                group_clip_h = clip_h / scale_x if scale_x != 0 else 0
+            else:
+                # Standard transformation matrix
+                if a == 0 or d == 0:
+                    logger.error(f"Invalid transform matrix for {image_filename}: a={a}, d={d}")
+                    return False
+                # Transform coordinates
+                group_clip_x = (clip_x - tx) / a
+                group_clip_y = (clip_y - ty) / d
+                group_clip_w = clip_w / a
+                group_clip_h = clip_h / d
             
             img_crop_x = group_clip_x - img_x
             img_crop_y = group_clip_y - img_y

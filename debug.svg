@@ -1,0 +1,61 @@
+<!--?xml version="1.0" encoding="UTF-8" standalone="no" ?-->
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1000" height="1000" viewBox="0 0 1000 1000" xml:space="preserve">
+<desc>Created with Fabric.js 5.5.2</desc>
+<defs>
+<clipPath id="CLIPPATH_490">
+	<rect transform="matrix(1 0 0 1 747.4040736262542 500.5)" x="-188.1508705494983" y="-282.22630582424745" rx="" ry="" width="376.3017410989966" height="564.4526116484949"></rect>
+</clipPath><clipPath id="CLIPPATH_491">
+	<rect transform="matrix(1 0 0 1 162.40407362625422 500.5)" x="-102.95087054949832" y="-154.4263058242475" rx="" ry="" width="205.90174109899664" height="308.852611648495"></rect>
+</clipPath><clipPath id="CLIPPATH_492">
+	<rect transform="matrix(1 0 0 1 415.4040736262542 500.5)" x="-102.95087054949832" y="-154.4263058242475" rx="" ry="" width="205.90174109899664" height="308.852611648495"></rect>
+</clipPath><style></style></defs>
+<g id="1756313594031" clip-path="url(#CLIPPATH_490)">
+<g transform="matrix(0 0.14 -0.14 0 735.8847898796978 500)">
+<filter id="SVGID_479" y="-20%" height="140%" x="-20%" width="140%">
+	<feGaussianBlur in="SourceAlpha" stdDeviation="0"></feGaussianBlur>
+	<feOffset dx="0" dy="0" result="oBlur"></feOffset>
+	<feFlood flood-color="rgb(0,0,0)" flood-opacity="1"></feFlood>
+	<feComposite in2="oBlur" operator="in"></feComposite>
+	<feMerge>
+		<feMergeNode></feMergeNode>
+		<feMergeNode in="SourceGraphic"></feMergeNode>
+	</feMerge>
+</filter>
+
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;filter: url(#SVGID_479);" xlink:href="https://fpd-api.ganymede-apps.net/rails/active_storage/blobs/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDcxNjU4MywicHVyIjoiYmxvYl9pZCJ9fQ==--4e98e18d7578bb5b7e7d5d2d56fc6da743071714/DFC9A2C6-16BB-46E5-8F24-87697F192CD9.jpeg?t=1756313594031" x="-2048" y="-1536" width="4096" height="3072"></image>
+</g>
+</g>
+<g id="1756313596321" clip-path="url(#CLIPPATH_491)">
+<g transform="matrix(0 0.06 -0.06 0 161.1749441757525 500)">
+<filter id="SVGID_481" y="-20%" height="140%" x="-20%" width="140%">
+	<feGaussianBlur in="SourceAlpha" stdDeviation="0"></feGaussianBlur>
+	<feOffset dx="0" dy="0" result="oBlur"></feOffset>
+	<feFlood flood-color="rgb(0,0,0)" flood-opacity="1"></feFlood>
+	<feComposite in2="oBlur" operator="in"></feComposite>
+	<feMerge>
+		<feMergeNode></feMergeNode>
+		<feMergeNode in="SourceGraphic"></feMergeNode>
+	</feMerge>
+</filter>
+
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;filter: url(#SVGID_481);" xlink:href="https://fpd-api.ganymede-apps.net/rails/active_storage/blobs/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDcxNjY1MCwicHVyIjoiYmxvYl9pZCJ9fQ==--fb9510e2c69b2590b30c2f97acd224664ac4afd7/IMG_9420.jpeg?t=1756313596321" x="-2592" y="-1728" width="5184" height="3456"></image>
+</g>
+</g>
+<g id="1756313599375" clip-path="url(#CLIPPATH_492)">
+<g transform="matrix(0 0.06 -0.06 0 431.4329992460889 516.9336941757525)">
+<filter id="SVGID_483" y="-20%" height="140%" x="-20%" width="140%">
+	<feGaussianBlur in="SourceAlpha" stdDeviation="0"></feGaussianBlur>
+	<feOffset dx="0" dy="0" result="oBlur"></feOffset>
+	<feFlood flood-color="rgb(0,0,0)" flood-opacity="1"></feFlood>
+	<feComposite in2="oBlur" operator="in"></feComposite>
+	<feMerge>
+		<feMergeNode></feMergeNode>
+		<feMergeNode in="SourceGraphic"></feMergeNode>
+	</feMerge>
+</filter>
+
+	<image style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;filter: url(#SVGID_483);" xlink:href="https://fpd-api.ganymede-apps.net/rails/active_storage/blobs/proxy/eyJfcmFpbHMiOnsiZGF0YSI6NDcxNjcwMywicHVyIjoiYmxvYl9pZCJ9fQ==--1771783c96fd6445e4c88050971dacf5ea1666bf/IMG_1982.jpeg?t=1756313599375" x="-2856" y="-2142" width="5712" height="4284"></image>
+</g>
+</g>
+</svg>
