@@ -235,33 +235,70 @@ class SVGProcessor:
                 logger.error(f"Invalid image dimensions for {image_filename}: width={img_width}, height={img_height}")
                 return False
             
-            # Handle rotation matrix - when a=0 and d=0, use b and c instead
-            # Matrix: [a, b, c, d, tx, ty]
-            # Standard: [sx, 0, 0, sy, tx, ty]
-            # Rotated 90°: [0, sy, -sx, 0, tx, ty] where sy=b and sx=-c
+            # Handle matrix transformation using proper inverse matrix calculation
             if a == 0 and d == 0:
-                # This is a 90-degree rotation matrix
+                # This is a rotation/scale matrix [0, b, c, 0, tx, ty]
                 if b == 0 or c == 0:
                     logger.error(f"Invalid rotation matrix for {image_filename}: b={b}, c={c}")
                     return False
-                # For 90-degree rotation: use b for scaling and c for direction
-                scale_x = abs(b)
-                scale_y = abs(c)
-                # Transform coordinates for rotated matrix
-                group_clip_x = (clip_x - tx) / scale_y if scale_y != 0 else 0
-                group_clip_y = (clip_y - ty) / scale_x if scale_x != 0 else 0
-                group_clip_w = clip_w / scale_y if scale_y != 0 else 0
-                group_clip_h = clip_h / scale_x if scale_x != 0 else 0
-            else:
-                # Standard transformation matrix
-                if a == 0 or d == 0:
-                    logger.error(f"Invalid transform matrix for {image_filename}: a={a}, d={d}")
+                
+                logger.info(f"Processing rotation matrix for {image_filename}: [0, {b}, {c}, 0, {tx}, {ty}]")
+                
+                # Calculate determinant for 2x2 matrix [0, c; b, 0]
+                det = 0 * 0 - b * c  # = -b*c
+                if abs(det) < 1e-10:
+                    logger.error(f"Matrix determinant too small: {det}")
                     return False
-                # Transform coordinates
+                
+                # Calculate inverse matrix elements
+                inv_a = 0 / det    # = 0
+                inv_b = -b / det   # = b/(b*c)  
+                inv_c = -c / det   # = c/(b*c)
+                inv_d = 0 / det    # = 0
+                
+                # Transform clip rectangle corners to image space
+                clip_corners = [
+                    (clip_x, clip_y),
+                    (clip_x + clip_w, clip_y),
+                    (clip_x, clip_y + clip_h),
+                    (clip_x + clip_w, clip_y + clip_h)
+                ]
+                
+                image_corners = []
+                for cx, cy in clip_corners:
+                    # Apply inverse transformation: subtract translation first, then apply inverse rotation
+                    cx_trans = cx - tx
+                    cy_trans = cy - ty
+                    
+                    # Apply inverse 2x2 matrix
+                    ix = inv_a * cx_trans + inv_c * cy_trans
+                    iy = inv_b * cx_trans + inv_d * cy_trans
+                    image_corners.append((ix, iy))
+                
+                # Find bounding box in image coordinate system
+                min_x = min(corner[0] for corner in image_corners)
+                max_x = max(corner[0] for corner in image_corners)
+                min_y = min(corner[1] for corner in image_corners)
+                max_y = max(corner[1] for corner in image_corners)
+                
+                # Convert to crop coordinates relative to image
+                group_clip_x = min_x
+                group_clip_y = min_y
+                group_clip_w = max_x - min_x
+                group_clip_h = max_y - min_y
+                
+                logger.debug(f"Clip corners in image space: {image_corners}")
+                logger.debug(f"Bounding box: ({group_clip_x:.1f}, {group_clip_y:.1f}, {group_clip_w:.1f}, {group_clip_h:.1f})")
+                    
+            elif a == 0 or d == 0:
+                logger.error(f"Invalid transform matrix for {image_filename}: a={a}, d={d}")
+                return False
+            else:
+                # Standard transformation matrix [a, 0, 0, d, tx, ty]
                 group_clip_x = (clip_x - tx) / a
-                group_clip_y = (clip_y - ty) / d
-                group_clip_w = clip_w / a
-                group_clip_h = clip_h / d
+                group_clip_y = (clip_y - ty) / d  
+                group_clip_w = clip_w / abs(a)
+                group_clip_h = clip_h / abs(d)
             
             img_crop_x = group_clip_x - img_x
             img_crop_y = group_clip_y - img_y
@@ -335,7 +372,7 @@ class SVGProcessor:
             h = float(root.get("height", 1000))
         svg_dims = (int(h), int(w))
 
-        # Find clipPaths
+        # Find clipPaths with their transformations
         clip_paths: Dict[str, Tuple[float, float, float, float]] = {}
         for clip_path_el in root.findall(".//svg:clipPath", ns):
             clip_id = clip_path_el.get("id")
@@ -347,14 +384,28 @@ class SVGProcessor:
                     width = float(rect_el.get("width"))
                     height = float(rect_el.get("height"))
                     
+                    # Apply clipPath rect's transform if it exists
                     transform = rect_el.get("transform", "")
-                    tx, ty = self.parse_transform(transform)
+                    if transform:
+                        # Parse matrix transform for clipPath rect
+                        clip_matrix = self.parse_matrix(transform)
+                        ca, cb, cc, cd, ctx, cty = clip_matrix
+                        
+                        # Apply transform to rect coordinates
+                        # For standard matrix [a, 0, 0, d, tx, ty]: x' = a*x + tx, y' = d*y + ty
+                        abs_x = ca * x + cc * y + ctx
+                        abs_y = cb * x + cd * y + cty
+                        # Transform dimensions (assuming no rotation in clipPath)
+                        abs_width = abs(ca) * width
+                        abs_height = abs(cd) * height
+                    else:
+                        abs_x, abs_y = x, y
+                        abs_width, abs_height = width, height
                     
-                    abs_x = x + tx
-                    abs_y = y + ty
-                    
-                    clip_paths[clip_id] = (abs_x, abs_y, width, height)
-                except (ValueError, TypeError):
+                    clip_paths[clip_id] = (abs_x, abs_y, abs_width, abs_height)
+                    logger.debug(f"ClipPath {clip_id}: ({abs_x:.1f}, {abs_y:.1f}, {abs_width:.1f}, {abs_height:.1f})")
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse clipPath {clip_id}: {e}")
                     continue
 
         # Process elements with clip-path
