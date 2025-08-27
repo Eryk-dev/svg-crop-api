@@ -88,9 +88,11 @@ def crop_svg():
                 zipf.write(file_path, file_path.name)
                 logger.info("Added to ZIP: %s", file_path.name)
 
-        if not crop_files:
+        # Check if we have any output files (crops or masks)
+        total_files = len(crop_files) + len(mask_files)
+        if total_files == 0:
             cleanup_temp_dir(temp_dir)
-            return jsonify({"success": False, "error": "No cropped images generated"}), 400
+            return jsonify({"success": False, "error": "No output files generated"}), 400
 
         zip_size = zip_path.stat().st_size
         with zip_path.open('rb') as f_zip:
@@ -104,6 +106,8 @@ def crop_svg():
             "file_size": zip_size,
             "regions_processed": result["regions_processed"],
             "images_downloaded": result["images_downloaded"],
+            "crop_files_generated": len(crop_files),
+            "mask_files_generated": len(mask_files),
         }
 
         return jsonify(response_body)
