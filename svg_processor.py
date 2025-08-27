@@ -30,7 +30,12 @@ class SVGProcessor:
         self.session = None
     
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        self.session = aiohttp.ClientSession(connector=connector)
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -79,7 +84,12 @@ class SVGProcessor:
         """Download a file from URL to destination path."""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                import ssl
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                self.session = aiohttp.ClientSession(connector=connector)
             
             async with self.session.get(url) as response:
                 response.raise_for_status()
@@ -99,7 +109,12 @@ class SVGProcessor:
         """Download SVG from URL and fix common formatting issues."""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                import ssl
+                ssl_context = ssl.create_default_context()
+                ssl_context.verify_mode = ssl.CERT_NONE
+                ssl_context.check_hostname = False
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                self.session = aiohttp.ClientSession(connector=connector)
             
             async with self.session.get(url) as response:
                 response.raise_for_status()
@@ -222,6 +237,16 @@ class SVGProcessor:
             clip_x, clip_y, clip_w, clip_h = clip_rect
             a, b, c, d, tx, ty = transform_matrix
             img_x, img_y, img_width, img_height = image_attrs
+            
+            # Check for division by zero in transform matrix
+            if a == 0 or d == 0:
+                logger.error(f"Invalid transform matrix for {image_filename}: a={a}, d={d}")
+                return False
+            
+            # Check for division by zero in image dimensions
+            if img_width == 0 or img_height == 0:
+                logger.error(f"Invalid image dimensions for {image_filename}: width={img_width}, height={img_height}")
+                return False
             
             # Transform coordinates
             group_clip_x = (clip_x - tx) / a

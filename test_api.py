@@ -16,10 +16,10 @@ def test_svg_crop_api():
     """Testa a API com uma URL SVG de exemplo"""
     
     # URL da API local
-    API_URL = "http://localhost:8877/crop-svg"
+    API_URL = "http://localhost:8877/crop_svg"
     
     # URL de exemplo de SVG (você pode substituir por uma URL real)
-    test_svg_url = "https://example.com/test.svg"
+    test_svg_url = "https://fpd-exporter-staging-v2.s3.amazonaws.com/775cb0b423bf1151fd6b80065102535f264873c8-e41cfa57-f349-4239-82e7-f5179dba072e/uibr1017-0-combo-8_view_0.svg"
     
     print("=" * 60)
     print("TESTE DA API SVG CROP - Verificação PNG com Alfa e Fundo Branco")
